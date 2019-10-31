@@ -77,27 +77,3 @@ def crop_img(img, box):
     x, y, w, h = box
     return img[y:y+h, x:x+w]
 
-
-def test(coords):
-    sorted_coords = sorted(coords, key=lambda c: (c[1], c[0]))
-    arr = np.array(coords)[:, 1]
-    arr = sorted(arr)
-    distances = []
-    for i in range(1, len(arr)):
-        distances.append(arr[i] - arr[i-1])
-
-    sorted_indexes = np.argsort(distances)
-    sorted_indexes = sorted(sorted_indexes[-15:])
-
-    old_index = 0
-    group = {}
-    for i in range(len(sorted_indexes)):
-        group[i] = sorted_coords[old_index:sorted_indexes[i]+1]
-        old_index = sorted_indexes[i] + 1
-
-    group[len(sorted_indexes)] = sorted_coords[old_index: -1]
-
-    for k, v in group.items():
-        group[k] = sorted(v, key=lambda x: x[0])
-
-    return group
