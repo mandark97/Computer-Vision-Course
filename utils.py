@@ -5,7 +5,7 @@ import numpy as np
 def img_to_bin(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     (thresh, img_bin) = cv2.threshold(
-        gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        gray, 150, 255, cv2.THRESH_BINARY)
     # Invert the image
     img_bin = 255 - img_bin
 

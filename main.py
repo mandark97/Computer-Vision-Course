@@ -16,10 +16,12 @@ matplotlib.rcParams['image.cmap'] = 'gray'
 
 
 def evaluate_exam(img_path, logger=None, debug_path=None):
+    # 5847,4132, 3
     img = cv2.imread(img_path)
     img_bin = img_to_bin(img)
+    blured_img = cv2.GaussianBlur(img_bin, (5, 5), 0)
 
-    img_processor = ImageProcessor(img_bin)
+    img_processor = ImageProcessor(blured_img)
     img_processor.find_bounding_boxes(kernel_length=70,
                                       kernel_size=(3, 3),
                                       alpha=0.5,
@@ -112,6 +114,6 @@ def run_for_img(i, debug=False):
 
 
 if __name__ == "__main__":
-    run_for_img(13, debug=True)
-    # results = [run_for_img(i, debug=True) for i in range(9, 151)]
-    # # print(f"{sum(results)}/{len(results)}")
+    # run_for_img(13, debug=True)
+    results = [run_for_img(i, debug=False) for i in range(1, 151)]
+    print(f"{sum(results)}/{len(results)}")
