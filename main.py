@@ -19,30 +19,22 @@ def evaluate_exam(img_path, logger=None, debug_path=None):
     # 5847,4132, 3
     img = cv2.imread(img_path)
     img_bin = img_to_bin(img)
-    blured_img = cv2.GaussianBlur(img_bin, (5, 5), 0)
 
-    img_processor = ImageProcessor(blured_img)
-    img_processor.find_bounding_boxes(kernel_length=70,
-                                      kernel_size=(3, 3),
-                                      alpha=0.5,
-                                      beta=0.5,
-                                      sort_method="left-to-right")
+    img_processor = ImageProcessor(img_bin)
     question_boxes = img_processor.select_boxes(
-        lambda x, y, w, h: w > 900 and h > 1500 and h < 3000)
-    img_processor.vizualize_selected_boxes(
+        box_selection_method=lambda x, y, w, h: w > 900 and h > 1500 and h < 3000, sort_method="left-to-right")
+    option_boxes = img_processor.select_boxes(
+        box_selection_method=lambda x, y, w, h: x > 2500 and y < 3000 and y > 2500 and w < 200 and h > 90 and h < 150,
+        sort_method="top-to-bottom")
+    img_processor.vizualize_selected_boxes(question_boxes,
         columns=2, figsize=(100, 100), path=debug_path)
 
     final_answers = {}
     for i, q in enumerate(question_boxes):
         question_box = crop_img(img_processor.img, q)
         question_box_processor = ImageProcessor(question_box)
-        question_box_processor.find_bounding_boxes(kernel_length=700,
-                                                   kernel_size=(3, 3),
-                                                   alpha=0.5,
-                                                   beta=0.5,
-                                                   sort_method="left-to-right")
         check_boxes = question_box_processor.select_boxes(
-            lambda x, y, w, h: w > 90 and h > 90 and h < 150 and w < 200)
+            box_selection_method=lambda x, y, w, h: w > 90 and h > 90 and h < 150 and w < 200, sort_method="left_to_right")
         exam_eval = ExamEvaluator(question_box, check_boxes, logger=logger)
         answers = exam_eval.evaluate(i * 15)
         final_answers.update(answers)
@@ -114,6 +106,6 @@ def run_for_img(i, debug=False):
 
 
 if __name__ == "__main__":
-    # run_for_img(13, debug=True)
-    results = [run_for_img(i, debug=False) for i in range(1, 151)]
-    print(f"{sum(results)}/{len(results)}")
+    run_for_img(13, debug=True)
+    # results = [run_for_img(i, debug=False) for i in range(1, 151)]
+    # print(f"{sum(results)}/{len(results)}")

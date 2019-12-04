@@ -9,6 +9,7 @@ def img_to_bin(img):
     # Invert the image
     img_bin = 255 - img_bin
 
+    img_bin = cv2.GaussianBlur(img_bin, (5, 5), 0)
     return img_bin
 
 
