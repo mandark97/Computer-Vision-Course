@@ -74,7 +74,7 @@ def find_sorted_contours(img, method="left-to-right"):
     return sort_contours(contours, method)
 
 
-def crop_img(img, box):
+def crop_img(img, box, border=0):
     x, y, w, h = box
-    return img[y:y+h, x:x+w]
+    return img[y+border:y+h-border*2, x+border:x+w-border*2]
 

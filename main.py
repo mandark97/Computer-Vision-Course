@@ -10,6 +10,7 @@ import numpy as np
 
 from exam_evaluator import ExamEvaluator
 from image_processor import ImageProcessor
+from number_detection import NumberDetection
 from utils import *
 
 matplotlib.rcParams['image.cmap'] = 'gray'
@@ -22,19 +23,39 @@ def evaluate_exam(img_path, logger=None, debug_path=None):
 
     img_processor = ImageProcessor(img_bin)
     question_boxes = img_processor.select_boxes(
-        box_selection_method=lambda x, y, w, h: w > 900 and h > 1500 and h < 3000, sort_method="left-to-right")
+        box_selection_method=lambda x,
+        y,
+        w,
+        h: w > 900 and h > 1500 and h < 3000,
+        sort_method="left-to-right")
+
     option_boxes = img_processor.select_boxes(
-        box_selection_method=lambda x, y, w, h: x > 2500 and y < 3000 and y > 2500 and w < 200 and h > 90 and h < 150,
+        box_selection_method=lambda x,
+        y,
+        w,
+        h: x > 2500 and y < 3000 and y > 2500 and w < 200 and h > 90 and h < 150,
         sort_method="top-to-bottom")
-    img_processor.vizualize_selected_boxes(question_boxes,
-        columns=2, figsize=(100, 100), path=debug_path)
+
+    boxes = [crop_img(img_bin, option_box, border=18)
+             for option_box in option_boxes]
+    option = np.argmax([box.mean() for box in boxes])
+    option_number = NumberDetection().predict(boxes[option])
 
     final_answers = {}
+
+    final_answers["subject"] = "I" if option == 0 else "F"
+    final_answers["subject_number"] = option_number
+    # img_processor.vizualize_selected_boxes(option_boxes,
+    #     columns=2, figsize=(100, 100), path=debug_path, border=18)
     for i, q in enumerate(question_boxes):
         question_box = crop_img(img_processor.img, q)
         question_box_processor = ImageProcessor(question_box)
         check_boxes = question_box_processor.select_boxes(
-            box_selection_method=lambda x, y, w, h: w > 90 and h > 90 and h < 150 and w < 200, sort_method="left_to_right")
+            box_selection_method=lambda x,
+            y,
+            w,
+            h: w > 90 and h > 90 and h < 150 and w < 200,
+            sort_method="left_to_right")
         exam_eval = ExamEvaluator(question_box, check_boxes, logger=logger)
         answers = exam_eval.evaluate(i * 15)
         final_answers.update(answers)
@@ -50,7 +71,9 @@ def load_answers(file):
     with open(file) as ans:
         ceva = ans.read()
         answers = ceva.splitlines()
-        answers.pop(0)
+        subject, subject_number = answers.pop(0).split(" ")
+        correct_answers["subject"] = subject
+        correct_answers["subject_number"] = int(subject_number)
         answers.pop(-1)
 
         for ans in answers:
@@ -62,12 +85,15 @@ def load_answers(file):
 
 def evaluate_answers(final_answers, correct_answers, logger=None):
     correct = 0
+    if final_answers["subject"] != correct_answers["subject"] or final_answers["subject_number"] != correct_answers["subject_number"]:
+        print(f"detected: {final_answers['subject']} {final_answers['subject_number']}, correct_answers: {correct_answers['subject']} {correct_answers['subject_number']}")
     for k, v in correct_answers.items():
         if final_answers[k] == v:
             correct = correct + 1
         else:
             pprint(
-                f"Question {k} Detected {final_answers[k]} Correct: {v}", logger)
+                f"Question {k} Detected {final_answers[k]} Correct: {v}",
+                logger)
 
     pprint(f"{correct}/{len(correct_answers)}", logger)
     print(f"{correct}/{len(correct_answers)}")
@@ -106,6 +132,6 @@ def run_for_img(i, debug=False):
 
 
 if __name__ == "__main__":
-    run_for_img(13, debug=True)
-    # results = [run_for_img(i, debug=False) for i in range(1, 151)]
-    # print(f"{sum(results)}/{len(results)}")
+    # run_for_img(13, debug=True)
+    results = [run_for_img(i, debug=False) for i in range(1, 151)]
+    print(f"{sum(results)}/{len(results)}")

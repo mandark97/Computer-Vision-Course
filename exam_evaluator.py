@@ -20,7 +20,7 @@ class ExamEvaluator(object):
     def evaluate(self, offset=0):
         self.__detect_rows()
         self.__detect_reference_header()
-        pprint(self.rows, self.logger)
+        # pprint(self.rows, self.logger)
 
         answers = {}
 
@@ -73,7 +73,7 @@ class ExamEvaluator(object):
         else:
             correct_answer, means = self.__marked_box(values)
 
-        pprint(means, self.logger)
+        # pprint(means, self.logger)
         return correct_answer
 
     def __marked_box(self, values):
