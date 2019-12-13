@@ -10,7 +10,7 @@ from utils import *
 LABELS = ["A", "B", "C", "D"]
 
 
-class ExamEvaluator(object):
+class QuestionBoxEvaluator(object):
     def __init__(self, question_box, check_boxes, logger=None):
         self.question_box = question_box
         self.check_boxes = check_boxes

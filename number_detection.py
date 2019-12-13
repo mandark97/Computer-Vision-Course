@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras import Model
-
+from utils import crop_img
 
 class MyModel(Model):
     def __init__(self):
@@ -54,3 +54,21 @@ class NumberDetection():
             img, (28, 28)), axis=2) / 255.0
         pred = model.predict(np.expand_dims(pred_img, axis=0))
         return np.argmax(pred)
+
+
+class OptionDetection():
+    def __init__(self, img, option_boxes):
+        self.img = img
+        self.option_boxes = option_boxes
+
+    def evaluate(self):
+        boxes = [crop_img(self.img, option_box, border=18)
+                 for option_box in self.option_boxes]
+        option = np.argmax([box.mean() for box in boxes])
+        option_number = NumberDetection().predict(boxes[option])
+
+        exam_number = {}
+        exam_number["subject"] = "I" if option == 0 else "F"
+        exam_number["subject_number"] = option_number
+
+        return exam_number
