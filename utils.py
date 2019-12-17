@@ -78,3 +78,39 @@ def crop_img(img, box, border=0):
     x, y, w, h = box
     return img[y+border:y+h-border*2, x+border:x+w-border*2]
 
+
+MAX_FEATURES = 10000
+GOOD_MATCH_PERCENT = 0.3
+
+def homography(img, template):
+    orb = cv2.ORB_create(MAX_FEATURES)
+    keypoints1, descriptors1 = orb.detectAndCompute(img, None)
+    keypoints2, descriptors2 = orb.detectAndCompute(template, None)
+
+    # Match features.
+    matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+    matches = matcher.match(descriptors1, descriptors2, None)
+
+    # Sort matches by score
+    matches.sort(key=lambda x: x.distance, reverse=False)
+
+    # Remove not so good matches
+    numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+    matches = matches[:numGoodMatches]
+
+    # Extract location of good matches
+    points1 = np.zeros((len(matches), 2), dtype=np.float32)
+    points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+    for i, match in enumerate(matches):
+        points1[i, :] = keypoints1[match.queryIdx].pt
+        points2[i, :] = keypoints2[match.trainIdx].pt
+
+    # Find homography
+    h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+
+    # Use homography
+    height, width = template.shape
+    im1Reg = cv2.warpPerspective(img, h, (width, height))
+
+    return im1Reg, h
