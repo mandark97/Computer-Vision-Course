@@ -35,8 +35,8 @@ def evaluate_exam(img_path, logger=None, debug_path=None):
 
     final_answers = {}
 
-    # exam_number = OptionDetection(img_bin, option_boxes).evaluate()
-    # final_answers.update(exam_number)
+    exam_number = OptionDetection(img_bin, option_boxes).evaluate()
+    final_answers.update(exam_number)
     # img_processor.vizualize_selected_boxes(option_boxes,
     #     columns=2, figsize=(100, 100), path=debug_path, border=18)
     for i, q in enumerate(question_boxes):
@@ -62,8 +62,8 @@ def load_answers(file):
         ceva = ans.read()
         answers = ceva.splitlines()
         subject, subject_number = answers.pop(0).split(" ")
-        # correct_answers["subject"] = subject
-        # correct_answers["subject_number"] = int(subject_number)
+        correct_answers["subject"] = subject
+        correct_answers["subject_number"] = int(subject_number)
         answers.pop(-1)
 
         for ans in answers:
@@ -75,9 +75,9 @@ def load_answers(file):
 
 def evaluate_answers(final_answers, correct_answers, logger=None):
     correct = 0
-    # if final_answers["subject"] != correct_answers["subject"] or final_answers["subject_number"] != correct_answers["subject_number"]:
-    #     print(
-    #         f"detected: {final_answers['subject']} {final_answers['subject_number']}, correct_answers: {correct_answers['subject']} {correct_answers['subject_number']}")
+    if final_answers["subject"] != correct_answers["subject"] or final_answers["subject_number"] != correct_answers["subject_number"]:
+        print(
+            f"detected: {final_answers['subject']} {final_answers['subject_number']}, correct_answers: {correct_answers['subject']} {correct_answers['subject_number']}")
     for k, v in correct_answers.items():
         if final_answers[k] == v:
             correct = correct + 1
