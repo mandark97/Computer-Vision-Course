@@ -82,13 +82,15 @@ def crop_img(img, box, border=0):
 MAX_FEATURES = 10000
 GOOD_MATCH_PERCENT = 0.3
 
+
 def homography(img, template):
     orb = cv2.ORB_create(MAX_FEATURES)
     keypoints1, descriptors1 = orb.detectAndCompute(img, None)
     keypoints2, descriptors2 = orb.detectAndCompute(template, None)
 
     # Match features.
-    matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+    matcher = cv2.DescriptorMatcher_create(
+        cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
     matches = matcher.match(descriptors1, descriptors2, None)
 
     # Sort matches by score

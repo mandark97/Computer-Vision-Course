@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras import Model
 from utils import crop_img
 
+
 class MyModel(Model):
     def __init__(self):
         super(MyModel, self).__init__()

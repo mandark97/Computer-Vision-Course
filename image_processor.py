@@ -10,10 +10,6 @@ class ImageProcessor(object):
 
     # useless
     def find_bounding_boxes(self, kernel_length, kernel_size, alpha, beta, sort_method):
-        # horizontal_lines_img, verticle_lines_img, kernel = detect_lines(
-        #     self.img, kernel_length)
-        # img_final_bin = combine_lines(
-        #     verticle_lines_img, horizontal_lines_img, kernel, alpha, beta)
         (thresh, img_bin) = cv2.threshold(self.img, 0, 255,
                                           cv2.THRESH_BINARY)
         (contours, self.bounding_boxes) = find_sorted_contours(img_bin, sort_method)
@@ -34,17 +30,14 @@ class ImageProcessor(object):
 
         return selected_boxes
 
-    def vizualize_selected_boxes(self, selected_boxes, rows=None, columns=1,
-            figsize=(100, 100), path=None, border=0):
+    def vizualize_selected_boxes(self, selected_boxes, rows=None, columns=1, border=0):
         rows = rows or ceil(len(selected_boxes) / columns)
 
-        fig, ax = plt.subplots(rows, columns, squeeze=False, figsize=figsize)
+        fig, ax = plt.subplots(rows, columns, squeeze=False)
 
         for i, box in enumerate(selected_boxes):
             ax[floor(i / columns)][i %
                                    columns].imshow(crop_img(self.img, box,
-                                       border))
+                                                            border))
 
-        if path:
-            plt.savefig(f"{path}/detected_boxes.png")
-        plt.clf()
+        plt.show()

@@ -1,23 +1,22 @@
-import os
-import pdb
-from collections import defaultdict
 from pprint import pprint
 
-import cv2
 import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
 
-from question_box_evaluator import QuestionBoxEvaluator
 from image_processor import ImageProcessor
 from number_detection import OptionDetection
+from question_box_evaluator import QuestionBoxEvaluator
 from utils import *
 
 matplotlib.rcParams['image.cmap'] = 'gray'
+matplotlib.rcParams['figure.figsize'] = 20, 20
+IMAGE = "image"
+PERSPECTIVE = "perspective"
+ROTATION = "rotation"
 
 template = cv2.imread("data/template.jpg", 0)
 
-def evaluate_exam(img_path, logger=None, debug_path=None):
+
+def evaluate_exam(img_path, explain=False):
     # 5847,4132, 3
     img = cv2.imread(img_path)
     img, _ = homography(img, template)
@@ -34,11 +33,14 @@ def evaluate_exam(img_path, logger=None, debug_path=None):
         sort_method="top-to-bottom")
 
     final_answers = {}
+    if explain:
+        img_processor.vizualize_selected_boxes(question_boxes,
+                                               columns=2)
+        img_processor.vizualize_selected_boxes(
+            option_boxes, columns=2, border=18)
 
     exam_number = OptionDetection(img_bin, option_boxes).evaluate()
     final_answers.update(exam_number)
-    # img_processor.vizualize_selected_boxes(option_boxes,
-    #     columns=2, figsize=(100, 100), path=debug_path, border=18)
     for i, q in enumerate(question_boxes):
         question_box = crop_img(img_processor.img, q)
         question_box_processor = ImageProcessor(question_box)
@@ -46,12 +48,12 @@ def evaluate_exam(img_path, logger=None, debug_path=None):
             box_selection_method=lambda x, y, w, h: w > 90 and h > 90 and h < 150 and w < 200,
             sort_method="left_to_right")
         exam_eval = QuestionBoxEvaluator(
-            question_box, check_boxes, logger=logger)
+            question_box, check_boxes)
         answers = exam_eval.evaluate(i * 15)
         final_answers.update(answers)
-
-        if debug_path:
-            exam_eval.vizualize_rows(str(i), debug_path)
+        if explain:
+            exam_eval.vizualize_checkboxes()
+            exam_eval.vizualize_rows(str(i))
 
     return final_answers
 
@@ -73,7 +75,7 @@ def load_answers(file):
     return correct_answers
 
 
-def evaluate_answers(final_answers, correct_answers, logger=None):
+def evaluate_answers(final_answers, correct_answers):
     correct = 0
     if final_answers["subject"] != correct_answers["subject"] or final_answers["subject_number"] != correct_answers["subject_number"]:
         print(
@@ -82,11 +84,9 @@ def evaluate_answers(final_answers, correct_answers, logger=None):
         if final_answers[k] == v:
             correct = correct + 1
         else:
-            pprint(
-                f"Question {k} Detected {final_answers[k]} Correct: {v}",
-                logger)
+            pprint(f"Question {k} Detected {final_answers[k]} Correct: {v}")
 
-    pprint(f"{correct}/{len(correct_answers)}", logger)
+    pprint(f"{correct}/{len(correct_answers)}")
     print(f"{correct}/{len(correct_answers)}")
     if correct == len(correct_answers):
         return True
@@ -94,35 +94,24 @@ def evaluate_answers(final_answers, correct_answers, logger=None):
         return False
 
 
-def run_for_img(i, debug=False):
+def run_for_img(i, image_type=IMAGE, explain=False):
     try:
-        img_path = f"data/exemple_corecte/perspective_{i}.jpg"
+        img_path = f"data/exemple_corecte/{image_type}_{i}.jpg"
         ans_path = f"data/exemple_corecte/image_{i}.txt"
         print("Running for ", i)
 
-        if debug:
-            os.makedirs(f"debug/{i}", exist_ok=True)
-            logger = open(f"debug/{i}/output.txt", "w")
-            debug_path = f"debug/{i}"
-        else:
-            logger = None
-            debug_path = None
-
         exam_answers = evaluate_exam(
-            img_path, logger=logger, debug_path=debug_path)
+            img_path, explain)
         correct_answers = load_answers(ans_path)
 
-        return evaluate_answers(exam_answers, correct_answers, logger)
+        return evaluate_answers(exam_answers, correct_answers)
     except Exception as error:
         print(error)
         print(f"Failed at {i}")
         return False
-    finally:
-        if logger:
-            logger.close()
 
 
 if __name__ == "__main__":
-    # run_for_img(13, debug=True)
-    results = [run_for_img(i, debug=False) for i in range(1, 151)]
-    print(f"{sum(results)}/{len(results)}")
+    run_for_img(2, explain=True)
+    # results = [run_for_img(i, debug=False) for i in range(1, 151)]
+    # print(f"{sum(results)}/{len(results)}")

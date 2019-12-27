@@ -81,7 +81,7 @@ class QuestionBoxEvaluator(object):
         return np.argmax(means), means
 
     def vizualize_rows(self, title="", path=None):
-        fig, ax = plt.subplots(len(self.rows), figsize=(100, 100))
+        fig, ax = plt.subplots(len(self.rows))
         fig.suptitle(title)
         plt.subplots_adjust(hspace=1)
 
@@ -93,13 +93,24 @@ class QuestionBoxEvaluator(object):
 
             row_img = self.__concatenate_row_imgs(values)
             ax[index].set_title(
-                f"Row: {row}, Boxes: {len(values)}")
+                f"Row: {row}, Boxes: {len(values)}, {values}")
             ax[index].imshow(row_img)
             index = index + 1
 
-        if path:
-            plt.savefig(f"{path}/{title}.png")
-        plt.clf()
+        plt.show()
+
+    def vizualize_checkboxes(self):
+        img = cv2.cvtColor(self.question_box, cv2.COLOR_GRAY2BGR)
+
+        for row, values in self.rows.items():
+            for v in values:
+                img = cv2.rectangle(
+                    img, (v[0], v[1]), (v[0] + v[2], v[1] + v[3]), (255, 0, 0), 3)
+                cv2.putText(img, f'{row}', (v[0]+5, v[1]+30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
+        plt.imshow(img)
+        plt.show()
 
     def __concatenate_row_imgs(self, values):
         row_img = []
@@ -113,5 +124,6 @@ class QuestionBoxEvaluator(object):
 
             means.append(empty_arr.mean())
             row_img.append(empty_arr)
+            row_img.append(np.full((max_h, 20), 255))
 
         return np.concatenate(row_img, axis=1)
